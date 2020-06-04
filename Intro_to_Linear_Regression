@@ -1,0 +1,42 @@
+!pip3 install quandl
+import pandas as pd
+import quandl,math
+import numpy as np
+from sklearn import preprocessing,svm
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+quandl.ApiConfig.api_key = '7y4Y2Lk2-zDQx_Ms97GU'
+#!pip freeze
+
+df = quandl.get("WIKI/GOOGL")
+
+df = df[['Adj. Open','Adj. Close','Adj. High','Adj. Low','Adj. Volume']]
+
+df['HL_PCT'] = ((df['Adj. High'] - df['Adj. Low'] ) /df['Adj. High'] ) * 100.0
+
+df['DAILY_PCT'] = ((df['Adj. Close'] - df['Adj. Open'] ) /df['Adj. Open'] ) * 100.0
+
+df = df[['Adj. Close','HL_PCT','DAILY_PCT','Adj. Volume']]
+
+forcast_col = 'Adj. Close'
+df.fillna(-99999,inplace=True)
+forecast_out = int(math.ceil(0.1*len(df)))
+df['label'] = df[forcast_col].shift(-forecast_out)
+df.dropna(inplace=True)
+
+x = np.array(df.drop('label',1))
+y = np.array(df['label'])
+x = preprocessing.scale(x)     #Center to the mean and component wise scale to unit variance.Standardize a dataset along any axis
+
+x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.2) #randomly schuffles the data and devide it into training and testing data
+
+clf = LinearRegression(n_jobs=10)
+clf.fit(x_train,y_train)   #fits the data over a linear regression model,fit is for training
+
+accuracy = clf.score(x_test,y_test) #score is for testing data
+print(accuracy)
+
+
+
+
+
